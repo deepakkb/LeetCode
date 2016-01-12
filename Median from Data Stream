@@ -1,198 +1,193 @@
-public class MedianFinder
-{
-    BinaryMaxHeap3 maxHeap = new BinaryMaxHeap3();        //To find max of smaller half elements
-    BinaryMinHeap3 minHeap = new BinaryMinHeap3();      //To find min of larger half elements
+public class MedianFinder {
 
-    // Adds a num into the data structure.
-    //If there is a new element, check if it is larger than all elements of minheap then add it to minheap (2nd half)
-    //Otherwise add the element to maxheap (1st half).
-    //Now balanace minheap and maxHeap to have a size difference of maximum by ONE
-    public void AddNum(double num)
+    MinHeap minHeap = new MinHeap();    //Keep track of right(2nd half) of the elements
+    MaxHeap maxHeap = new MaxHeap();    //Keep track of left (1st half) of the elements
+    public void AddNum(int num)
     {
-        if (minHeap.Length() ==0)
+        if (minHeap.Size() == 0)
         {
-            minHeap.Insert((int)num);
-
+            minHeap.HeapInsert(num);
         }
         else
         {
-            if (num >= minHeap.Top().Data)
-            {
-                minHeap.Insert((int)num);
-            }
+            if (num > minHeap.Minimum())
+                minHeap.HeapInsert(num);
             else
-            {
-                maxHeap.Insert((int)num);
-            }
+                maxHeap.HeapInsert(num);
         }
 
-        //Now rebalance the two heaps
-        if (minHeap.Length() > (maxHeap.Length() +1))
+        //Now rebalance two heaps
+        if (minHeap.Size() > maxHeap.Size()+1)
         {
-            maxHeap.Insert(minHeap.Remove().Data);
+            maxHeap.HeapInsert(minHeap.HeapExtractMin());
         }
-        else if (maxHeap.Length() > minHeap.Length())
+        else if (maxHeap.Size() > minHeap.Size())
         {
-            minHeap.Insert(maxHeap.Remove().Data);
+            minHeap.HeapInsert(maxHeap.HeapExtractMax());
         }
     }
 
-    // return the median of current data stream
     public double FindMedian()
     {
-        if (minHeap.Length() == 0)
+        if (minHeap.Size() == 0)
             return 0;
-        if (minHeap.Length() == maxHeap.Length())
-            return (minHeap.Top().Data + maxHeap.Top().Data) / 2d;
+        else if (minHeap.Size() == maxHeap.Size())
+            return (minHeap.Minimum() + maxHeap.Maximum()) / 2d;
         else
-            return minHeap.Top().Data;
+            return minHeap.Minimum();
+    }
+
+}
+
+
+public class MinHeap
+{
+    public List<int> heapData;   //Array List to store data to maintain heap data structure
+
+    public MinHeap()
+    {
+        heapData = new List<int>();
+    }
+
+    //This subroutine builds the MinHeap at position i. It is assumed that left child and right child of i are proper heaps
+    public void Heapify(int i)
+    {
+        int left = i * 2 + 1;
+        int right = i * 2 + 2;
+        int len = heapData.Count;
+        int smaller;
+        if (left < len && heapData[left] < heapData[i])
+            smaller = left;
+        else
+            smaller = i;
+        if (right < len && heapData[right] < heapData[smaller])
+            smaller = right;
+
+        if (smaller != i)
+        {
+            //exchange heapData[i] and heapData[smaller]
+            int tmp = heapData[i];
+            heapData[i] = heapData[smaller];
+            heapData[smaller] = tmp;
+
+            //do Heapify on smaller element
+            Heapify(smaller);
+        }
+    }
+
+    //This subroutine removes the minimum element from heapData and returns it
+    public int HeapExtractMin()
+    {
+        if (heapData.Count < 1)
+            throw new Exception("Heap underflow error");
+        int len = heapData.Count;
+
+        int min = heapData[0];
+        heapData[0] = heapData[len - 1];
+        heapData.RemoveAt(len - 1);
+        Heapify(0);
+        return min;
+    }
+
+    //This subroutine inserts an element to heap
+    public void HeapInsert(int key)
+    {
+        heapData.Add(key);
+        int i = heapData.Count-1;
+        while(i >0 && heapData[(i-1)/2] > heapData[i])
+        {
+            //exchange heapData[(i-1)/2] and heapData[i]
+            int tmp = heapData[i];
+            heapData[i] = heapData[(i - 1) / 2];
+            heapData[(i - 1) / 2] = tmp;
+            i = (i - 1) / 2;
+        }
+    }
+
+    //Retrns min element of the heap
+    public int Minimum()
+    {
+        return heapData[0];
+    }
+
+    public int Size()
+    {
+        return heapData.Count;
     }
 }
-    
-    public class BinaryMaxHeap3
+
+public class MaxHeap
+{
+    public List<int> heapData;   //Array List to store data to maintain heap data structure
+
+    public MaxHeap()
     {
-        private List<HeapData2> heapData;
+        heapData = new List<int>();
+    }
 
-        public BinaryMaxHeap3()
+    //This subroutine builds the MaxHeap at position i. It is assumed that left child and right child of i are proper heaps
+    public void Heapify(int i)
+    {
+        int left = i * 2 + 1;
+        int right = i * 2 + 2;
+        int len = heapData.Count;
+        int larger;
+        if (left < len && heapData[left] > heapData[i])
+            larger = left;
+        else
+            larger = i;
+        if (right < len && heapData[right] > heapData[larger])
+            larger = right;
+
+        if (larger != i)
         {
-            heapData = new List<HeapData2>();
-        }
+            //exchange heapData[i] and heapData[larger]
+            int tmp = heapData[i];
+            heapData[i] = heapData[larger];
+            heapData[larger] = tmp;
 
-        public int Length()
-        {
-            return (this.heapData.Count);
-        }
-
-        //Shifts the elements up till the element reaches correct position, done after new element is added at end of list
-        private void ShiftUp(int nodeIndex)
-        {
-            int parentIndex = (nodeIndex - 1) / 2;
-            if (parentIndex < 0)
-                return;
-            if (heapData[parentIndex].Data < heapData[nodeIndex].Data)
-            {
-                //exchange data[parentIndex] and data[nodeIndex];
-                HeapData2 tmp = heapData[parentIndex];
-                heapData[parentIndex] = heapData[nodeIndex];
-                heapData[nodeIndex] = tmp;
-                ShiftUp(parentIndex);
-            }
-        }
-        //Shift the element down till the element reaches correct position, after an element is removed from 0th position of list
-        private void ShiftDown(int nodeIndex)
-        {
-            int leftChildIndex = nodeIndex * 2 + 1;
-            int rightChildIndex = nodeIndex * 2 + 2;
-            int maxIndex;
-            if (leftChildIndex < heapData.Count && heapData[leftChildIndex].Data > heapData[nodeIndex].Data)
-                maxIndex = leftChildIndex;
-            else
-                maxIndex = nodeIndex;
-            if (rightChildIndex < heapData.Count && heapData[rightChildIndex].Data > heapData[nodeIndex].Data)
-                maxIndex = rightChildIndex;
-
-            if (maxIndex != nodeIndex)
-            {
-                HeapData2 tmp = heapData[maxIndex];
-                heapData[maxIndex] = heapData[nodeIndex];
-                heapData[nodeIndex] = tmp;
-                ShiftDown(maxIndex);
-            }
-        }
-
-
-        //Always insert at the last position and keep shifting up till everyone is at correct position.
-        public void Insert(int n)
-        {
-            heapData.Add(new HeapData2(n));
-            ShiftUp(heapData.Count - 1);
-        }
-
-        //Remove the element at 0th position and keep shifting down till everyone is at correct position
-        public HeapData2 Remove()
-        {
-            HeapData2 tmp = heapData[0];
-            heapData.RemoveAt(0);
-            ShiftDown(0);
-            return tmp; ;
-        }
-
-        public HeapData2 Top()
-        {
-            return heapData[0];
+            //do Heapify on larger element
+            Heapify(larger);
         }
     }
-    
-    public class BinaryMinHeap3
+
+    //This subroutine removes the maximum element from heapData and returns it
+    public int HeapExtractMax()
     {
-        private List<HeapData2> heapData;
+        if (heapData.Count < 1)
+            throw new Exception("Heap underflow error");
+        int len = heapData.Count;
 
-        public BinaryMinHeap3()
+        int max = heapData[0];
+        heapData[0] = heapData[len - 1];
+        heapData.RemoveAt(len - 1);
+        Heapify(0);
+        return max;
+    }
+
+    //This subroutine inserts an element to heap
+    public void HeapInsert(int key)
+    {
+        heapData.Add(key);
+        int i = heapData.Count-1;
+        while(i >0 && heapData[(i-1)/2] < heapData[i])
         {
-            heapData = new List<HeapData2>();
-        }
-
-        public int Length()
-        {
-            return (this.heapData.Count);
-        }
-
-        //Shifts the elements up till the element reaches correct position
-        private void ShiftUp(int nodeIndex)
-        {
-            int parentIndex = (nodeIndex - 1) / 2;
-            if (parentIndex < 0)
-                return;
-            if (heapData[parentIndex].Data > heapData[nodeIndex].Data)
-            {
-                //exchange data[parentIndex] and data[nodeIndex];
-                HeapData2 tmp = heapData[parentIndex];
-                heapData[parentIndex] = heapData[nodeIndex];
-                heapData[nodeIndex] = tmp;
-                ShiftUp(parentIndex);
-            }
-        }
-        //Shift the element down till the element reaches correct position
-        private void ShiftDown(int nodeIndex)
-        {
-            int leftChildIndex = nodeIndex * 2 + 1;
-            int rightChildIndex = nodeIndex * 2 + 2;
-            int minIndex;
-            if (leftChildIndex < heapData.Count && heapData[leftChildIndex].Data < heapData[nodeIndex].Data)
-                minIndex = leftChildIndex;
-            else
-                minIndex = nodeIndex;
-            if (rightChildIndex < heapData.Count && heapData[rightChildIndex].Data < heapData[nodeIndex].Data)
-                minIndex = rightChildIndex;
-
-            if (minIndex != nodeIndex)
-            {
-                HeapData2 tmp = heapData[minIndex];
-                heapData[minIndex] = heapData[nodeIndex];
-                heapData[nodeIndex] = tmp;
-                ShiftDown(minIndex);
-            }
-        }
-
-
-        //Always insert at the last position and keep shifting up till everyone is at correct position.
-        public void Insert(int n)
-        {
-            heapData.Add(new HeapData2(n));
-            ShiftUp(heapData.Count - 1);
-        }
-
-        //Remove the element at 0th position and keep shifting down till everyone is at correct position
-        public HeapData2 Remove()
-        {
-            HeapData2 tmp = heapData[0];
-            heapData.RemoveAt(0);
-            ShiftDown(0);
-            return tmp; ;
-        }
-
-        public HeapData2 Top()
-        {
-            return heapData[0];
+            //exchange heapData[(i-1)/2] and heapData[i]
+            int tmp = heapData[i];
+            heapData[i] = heapData[(i - 1) / 2];
+            heapData[(i - 1) / 2] = tmp;
+            i = (i-1) / 2;
         }
     }
+
+    //Retrns max element of the heap
+    public int Maximum()
+    {
+        return heapData[0];
+    }
+
+    public int Size()
+    {
+        return heapData.Count;
+    }
+}
