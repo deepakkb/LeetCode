@@ -1,0 +1,91 @@
+public class StackUsingHeap
+    {
+        MaxHeapWithPriority maxHeap;
+
+        public StackUsingHeap()
+        {
+            maxHeap = new MaxHeapWithPriority();
+        }
+        public void Push(int data)
+        {
+            maxHeap.HeapInsert(data);
+        }
+
+        public int Pop()
+        {
+            return maxHeap.HeapExtractMax();
+        }
+    }
+
+    public class StackData
+    {
+        public int data { get; set; }
+        public int priority { get; set; }
+    }
+
+    public class MaxHeapWithPriority
+    {
+        public List<StackData> lstStackData;
+
+        public MaxHeapWithPriority()
+        {
+            lstStackData = new List<StackData>();
+        }
+
+        public void Heapify(int i)
+        {
+            int len = lstStackData.Count;
+            int left = i * 2 + 1;
+            int right = i * 2 + 2;
+            int larger;
+            if (left < len && lstStackData[left].priority > lstStackData[i].priority)
+                larger = left;
+            else
+                larger = i;
+            if (right < len && lstStackData[right].priority > lstStackData[larger].priority)
+                larger = right;
+
+            if (i != larger)
+            {
+                //exchange items at i and larger
+                StackData tmp = lstStackData[i];
+                lstStackData[i] = lstStackData[larger];
+                lstStackData[larger] = tmp;
+
+                //call heapify recursively
+                Heapify(larger);
+            }
+        }
+
+        public int HeapExtractMax()
+        {
+            int len = lstStackData.Count;
+            int max = lstStackData[0].data;
+            lstStackData[0] = lstStackData[len - 1];
+            lstStackData.RemoveAt(len - 1);
+            Heapify(0);
+            return max;
+        }
+
+        public void HeapInsert(int data)
+        {
+            
+            int tmpPriority = 0;
+            if (lstStackData.Count > 0)
+                tmpPriority = lstStackData[0].priority + 1;
+            StackData stackData = new StackData() { data = data, priority = tmpPriority };
+            lstStackData.Add(stackData);
+
+            int len = lstStackData.Count;
+            int i = len - 1;
+            while (i > 0 && lstStackData[(i-1)/2].priority < lstStackData[i].priority)
+            {
+                StackData tmp = lstStackData[i];
+                lstStackData[i] = lstStackData[(i - 1) / 2];
+                lstStackData[(i - 1) / 2] = tmp;
+                i = (i - 1) / 2;
+            }
+        }
+
+
+    }
