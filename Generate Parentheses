@@ -1,0 +1,22 @@
+public IList<string> GenerateParenthesis(int n) {
+        IList<string> lst = new List<string>();
+        StringBuilder sb = new StringBuilder();
+        Print(n, 0, sb, lst);
+        return lst;
+    }
+    
+    private void Print(int n, int start, StringBuilder curr, IList<string> lst)
+    {
+        if (start >=n)
+        {
+            if (!lst.Contains(curr.ToString()))
+                lst.Add(curr.ToString());
+            return;
+        }
+        for (int i=0; i<=curr.Length; i++)
+        {
+            curr.Insert(i, "()");
+            Print(n, start+1, curr, lst);
+            curr.Remove(i, 2);
+        }
+    }
